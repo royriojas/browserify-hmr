@@ -3,21 +3,31 @@
 var _ = require('lodash');
 var express = require('express');
 var http = require('http');
+var https= require('https');
 var socketio = require('socket.io');
 var has = require('./has');
+var path = require('path');
+var fs = require('fs');
 
 function log() {
   console.log.apply(console, [new Date().toTimeString(), '[HMR]'].concat(_.toArray(arguments)));
 }
 
-var hostname, port;
+var hostname, port, ssl, sslKey, sslCert;
 var io;
 var currentModuleData = {};
 
 var runServer = _.once(function() {
   var app = express();
-  var server = http.Server(app);
+  var useSSL = ssl && (typeof sslKey !== 'undefined' && typeof sslCert !== 'undefined');
+
+  var server = !useSSL ? http.Server(app) : https.createServer({
+    key: fs.readFileSync(path.resolve(sslKey)),
+    cert: fs.readFileSync(path.resolve(sslCert))
+  }, app);
+
   io = socketio(server);
+
   io.on('connection', function(socket) {
     socket.on('sync', function(syncMsg) {
       log('User connected, syncing');
@@ -61,6 +71,10 @@ process.on('message', function(msg) {
     // log('received config');
     hostname = msg.hostname;
     port = msg.port;
+    ssl = msg.ssl;
+    sslKey = msg.sslKey;
+    sslCert = msg.sslCert;
+
   } else if (msg.type === 'setNewModuleData') {
     // log('received setNewModuleData');
     process.send({type: 'confirmNewModuleData'});

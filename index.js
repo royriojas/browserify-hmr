@@ -72,6 +72,7 @@ module.exports = function(bundle, opts) {
 
   var basedir = opts.basedir !== undefined ? opts.basedir : process.cwd();
   var em = new EventEmitter();
+  var ssl, sslKey, sslCert;
 
   var sioPath = null;
   if (updateMode === 'websocket') {
@@ -81,6 +82,14 @@ module.exports = function(bundle, opts) {
     if (!m) throw new Error("Failed to parse update url");
     var hostname = m[1];
     var port = m[2] ? +m[2] : 80;
+
+    ssl = !!updateUrl.match(/^https/);
+    sslKey = boolOpt(readOpt(opts, 'sslKey', 's', ''));
+    sslCert = boolOpt(readOpt(opts, 'sslCert', 'c', ''));
+
+    if (ssl && (!sslKey || !sslCert)) {
+      throw new Error("ssl mode needs sslKey and sslCert options");
+    }
 
     sioPath = './'+path.relative(basedir, require.resolve('socket.io-client'));
   }
@@ -110,7 +119,10 @@ module.exports = function(bundle, opts) {
     server.send({
       type: 'config',
       hostname: hostname,
-      port: port
+      port: port,
+      ssl: ssl,
+      sskKey: sslKey,
+      sslCert: sslCert
     });
   });
 
