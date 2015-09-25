@@ -84,12 +84,16 @@ module.exports = function(bundle, opts) {
     var port = m[2] ? +m[2] : 80;
 
     ssl = !!updateUrl.match(/^https/);
-    sslKey = boolOpt(readOpt(opts, 'sslKey', 's', ''));
-    sslCert = boolOpt(readOpt(opts, 'sslCert', 'c', ''));
+    ssl && console.log('using ssl');
+
+    sslKey = readOpt(opts, 'sslKey', 's', '');
+    sslCert = readOpt(opts, 'sslCert', 'c', '');
 
     if (ssl && (!sslKey || !sslCert)) {
       throw new Error("ssl mode needs sslKey and sslCert options");
     }
+    console.log('sslKey:', sslKey);
+    console.log('sslCert:', sslCert);
 
     sioPath = './'+path.relative(basedir, require.resolve('socket.io-client'));
   }
@@ -121,7 +125,7 @@ module.exports = function(bundle, opts) {
       hostname: hostname,
       port: port,
       ssl: ssl,
-      sskKey: sslKey,
+      sslKey: sslKey,
       sslCert: sslCert
     });
   });

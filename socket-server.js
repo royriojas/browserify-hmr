@@ -50,7 +50,8 @@ var runServer = _.once(function() {
     });
   });
   server.listen(port, hostname, function() {
-    log('Listening on '+hostname+':'+port);
+    var protocol = ssl ? 'https://' : 'http://';
+    log('Listening on '+protocol+hostname+':'+port);
   });
 });
 
